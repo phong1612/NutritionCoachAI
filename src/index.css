@@ -58,32 +58,87 @@ body {
 
 /*Header*/
 header {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  height: 150px;
-  align-items: center;
-  justify-content: center;
-  background-color: #FFFFFF;
-  box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.1), 0px 1px 2px 0px rgba(0, 0, 0, 0.06);
+    position: sticky;
+    top: 0;
+    z-index: 100;    /* raise header above page content */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    height: 150px;
+    align-items: center;
+    justify-content: center;
+    background-color: #FFFFFF;
+    box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.1), 0px 1px 2px 0px rgba(0, 0, 0, 0.06);
 }
-header .title{
-  display: flex;
-  gap: 12px;
-  width: 100%;
-  height: 75px;
-  align-items: center;
-  justify-content: center;
-  /* border-bottom: 1px solid black; */
-  box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.1), 0px 1px 2px 0px rgba(0, 0, 0, 0.06);
+header .menu {
+    display: flex;
+    width: 100%;
+    height: 75px;
+    align-items: center;
+    padding: 0 20px;
+    box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.1), 0px 1px 2px 0px rgba(0, 0, 0, 0.06);
 }
 
-header .title > img {
-  width: 50px;
+header .menu .menu-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: absolute;   /* take it out of flow */
+    left: 50%;
+    transform: translateX(-50%);  /* true center */
 }
-header .title > h1 {
+
+header .menu .menu-title > img {
+  width: 50px;
+  height: 50px;
+}
+header .menu .menu-title > h1 {
   font-weight: 400;
 }
+
+
+
+.avatar-wrapper {
+    position: relative;
+    margin-left: auto;
+    margin-right: 20px;
+}
+
+.avatar-wrapper img {
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.avatar-wrapper button {
+  border: transparent;
+  width: 100%;
+  cursor: pointer;
+  background-color: white;
+  font-weight: 700;
+}
+
+
+/* hide by default */
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 110%;
+    right: 0;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 8px 0;
+    min-width: 180px;
+    list-style: none;
+    z-index: 101;
+}
+
+/* show on hover or focus */
+.avatar-wrapper:focus-within .dropdown-menu {
+    display: block;
+    padding: 20px;
+}
+
 header .header-navigation {
   width: 100%;
   display: flex;

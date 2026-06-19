@@ -8,7 +8,7 @@ export default function Header(props) {
         props.setActiveButton(buttonName);
     };
 
-    const { signOut } = userAuth()
+    const { session, signOut } = userAuth()
     const navigate = useNavigate()
 
     async function handleSignOut() {
@@ -17,10 +17,21 @@ export default function Header(props) {
     }
     return (
         <header>
-            <div className="title">
-                <img src={AI_Chef} alt="AI_Chef" />
-                <h1>Nutrition Coach</h1>
-                <button onClick={handleSignOut}>Sign Out</button>
+            <div className="menu">
+                <div className="menu-title">
+                    <img src={AI_Chef} alt="AI_Chef" />
+                    <h1>Nutrition Coach</h1>
+                </div>
+                
+                <div className="avatar-wrapper">
+                    <img src={AI_Chef} alt="Avatar" width="50px" tabIndex="0" />
+                    <ul className="dropdown-menu">
+                        <li><p>{session?.user?.email}</p></li>
+                        <hr />
+                        <li><button onClick={handleSignOut}>Sign Out</button></li>
+                    </ul>
+                </div>
+
             </div>
             <nav className="header-navigation">
 
