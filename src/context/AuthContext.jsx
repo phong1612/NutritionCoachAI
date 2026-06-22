@@ -57,6 +57,7 @@ export function AuthContextProvider({ children }) {
             return {success: true, data}
         } catch(error) {
             console.error("An error occurred: ", error)
+            return { success: false, error: err.message || "Unknown error" }
         }
     }
 

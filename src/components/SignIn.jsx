@@ -20,9 +20,12 @@ export default function SignUp() {
         try {
             const result = await signInUser(email, password)
             console.log(result)
-            if (result.success) {
-                navigate('/Dashboard')
+            if (!result.success) {
+                setError(result.error?.message)
+                return
             }
+
+            navigate('/Dashboard')
         } catch (err) {
             setError('An error occurred: ');
         } finally {
@@ -54,7 +57,7 @@ export default function SignUp() {
                 />
                 <button type="submit">Sign In</button>
                 <p> Don't have an account? <Link to='/signUp'>Sign Up</Link></p>
-                {error && <p>{error}</p>}
+                {error && <p style={{ color: "red" }}>{error}</p>}
             </div>
         </form>
     )

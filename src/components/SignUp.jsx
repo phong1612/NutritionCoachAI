@@ -69,7 +69,7 @@ export default function SignUp() {
                     onChange={(e) => setConfirmPassword(e.target.value)}
                 />
                 <button type="submit">Sign Up</button>
-                {error && <p>{error}</p>}
+                {error && <p style={{ color: "red" }}>{error}</p>}
             </div>
         </form>
     )

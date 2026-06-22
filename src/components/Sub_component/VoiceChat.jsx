@@ -1,8 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import useSpeechRecognition from '../../hooks/useSpeechRecognition'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import styles from './VoiceChat.module.css'
+import { supabase } from '../../SupabaseCli'
+import { userAuth } from '../../context/AuthContext'
+import { loadMessages, saveMessages } from '../../services/chatServices'
 
 
 export default function VoiceChat() {
@@ -11,23 +14,48 @@ export default function VoiceChat() {
     const { transcript, isListening, startListening, stopListening, setIsListening } = useSpeechRecognition()
     const [AIResponse, setAIResponse] = useState("")
     const [usedVoice, setUsedVoice] = useState(false)
-
+    const [loadingMessages, setLoadingMessages] = useState(true)
+    const { session, signInUser } = userAuth()
+    const user = session?.user
 
     // sync transcript into input when voice is used
     const displayText = isListening ? transcript : inputText
+    useEffect(() => {
+        if(user?.id) {
+            setLoadingMessages(true)
+            loadMessages(user.id).then(
+                (data) => {
+                    setMessage(data)
+                })
+                .catch((error) => {
+                    console.error(error)
+                })
+                .finally(() => {
+                    setLoadingMessages(false)
+                })
+        }
+    }, [user])
 
+    
     async function handleSend(e) {
         if (isListening) {
             stopListening()
             setInputText(transcript)  // copy transcript into input when stopped
             setUsedVoice(true)
         }
+
         const textToSend = inputText.trim() || transcript.trim()
         if (!textToSend) return;
 
         // Add user's message to the chat
-        setMessage(prev => [...prev, { role: 'user', content: textToSend }])
         setInputText('')  // clear input after sending
+
+        await saveMessages({
+            user_id: user.id,
+            role: "user",
+            content: textToSend,
+            created_at: new Date().toISOString()
+        })
 
         // Send the message to API
         const response = await fetch('/api/chat', {
@@ -39,7 +67,17 @@ export default function VoiceChat() {
         });
 
         const data = await response.json();
-        setMessage(prev => [...prev, { role: 'assistant', content: data.response }]);
+        
+        await saveMessages({
+            user_id: user.id,
+            role: "assistant",
+            content: data.response,
+            created_at: new Date().toISOString()
+        })
+
+        const msgs = await loadMessages(user.id)
+        setMessage(msgs)
+        setLoadingMessages(false)
 
         // optional: speak the response back
         if (usedVoice) {
@@ -82,6 +120,7 @@ export default function VoiceChat() {
             </div>
 
             <div className={styles["chat-history"]}>
+                {loadingMessages && <p>Loading chat...</p>}
                 {message.length === 0 && (
                     <p className={styles["sous-msg"]}>
                         Good day. I'm SOUS, your culinary assistant. Ask me anything — 

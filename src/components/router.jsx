@@ -3,7 +3,7 @@ import App from "../App";
 import SignUp from "./SignUp";
 import SignIn from "./SignIn";
 import Dashboard from "./Dashboard";
-import PrivateRoute from "./PrivateRoute";
+import PrivateRoute from "./PrivateRouter";
 
 export const router = createBrowserRouter([
     {path: "/", element: <App/>},
