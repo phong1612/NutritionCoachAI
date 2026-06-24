@@ -49,13 +49,23 @@ export default function VoiceChat() {
 
         // Add user's message to the chat
         setInputText('')  // clear input after sending
-
-        await saveMessages({
+        const user_msg = {
             user_id: user.id,
             role: "user",
             content: textToSend,
             created_at: new Date().toISOString()
-        })
+        }
+        setMessage(prev => [...prev, user_msg])
+        saveMessages(user_msg)
+
+        // Loading for AI
+        const AI_think = {
+            user_id: user.id,
+            role: "assistant",
+            content: "Thinking...",
+            created_at: new Date().toISOString()
+        }
+        setMessage(prev => [...prev, AI_think])
 
         // Send the message to API
         const response = await fetch('/api/chat', {
@@ -67,16 +77,30 @@ export default function VoiceChat() {
         });
 
         const data = await response.json();
-        
-        await saveMessages({
+
+        const AI_msg = {
             user_id: user.id,
             role: "assistant",
             content: data.response,
             created_at: new Date().toISOString()
-        })
+        }
+        setMessage(prev =>
+            prev.map(msg =>
+                msg.content === "Thinking..."
+                    ? {
+                        user_id: user.id,
+                        role: "assistant",
+                        content: data.response,
+                        created_at: new Date().toISOString()
+                    }
+                    : msg
+            )
+        )
+        
+        saveMessages(AI_msg)
 
-        const msgs = await loadMessages(user.id)
-        setMessage(msgs)
+        // const msgs = await loadMessages(user.id)
+        // setMessage(msgs)
         setLoadingMessages(false)
 
         // optional: speak the response back
