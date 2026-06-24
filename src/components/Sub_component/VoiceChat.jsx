@@ -98,9 +98,6 @@ export default function VoiceChat() {
         )
         
         saveMessages(AI_msg)
-
-        // const msgs = await loadMessages(user.id)
-        // setMessage(msgs)
         setLoadingMessages(false)
 
         // optional: speak the response back
