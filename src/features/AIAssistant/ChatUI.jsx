@@ -9,33 +9,54 @@ import { loadMessages, saveMessages } from '../../services/chatServices'
 import sidebar from '../../assets/sidebar.svg'
 
 export default function ChatUI(props) {
-    const [message, setMessage] = useState([])
+    const [messageHistory, setMessage] = useState([])
     const [inputText, setInputText] = useState('')
     const { transcript, isListening, startListening, stopListening, setIsListening } = useSpeechRecognition()
     const [AIResponse, setAIResponse] = useState("")
     const [usedVoice, setUsedVoice] = useState(false)
-    const [loadingMessages, setLoadingMessages] = useState(true)
-    const [currentConvoId, setCurrentConvoId] = useState(props.conversationId)
+    const [loadingMessages, setLoadingMessages] = useState(false)
     const { session, signInUser } = userAuth()
     const user = session?.user
 
     // sync transcript into input when voice is used
     const displayText = isListening ? transcript : inputText
+    // useEffect(() => {
+    //     setMessage([])
+    //     if(props.conversationId && user?.id) {
+    //         setLoadingMessages(true)
+    //         loadMessages(props.conversationId).then(
+    //             (data) => {
+    //                 setMessage(data)
+    //             })
+    //             .finally(() => {
+    //                 setLoadingMessages(false)
+    //             })
+    //     } else {
+    //         setLoadingMessages(false)
+    //     }
+    // }, [user, props.conversationId])
+
     useEffect(() => {
-        setMessage([])
-        if(props.conversationId && user?.id) {
-            setLoadingMessages(true)
-            loadMessages(props.conversationId).then(
-                (data) => {
-                    setMessage(data)
-                })
-                .finally(() => {
-                    setLoadingMessages(false)
-                })
-        } else {
-            setLoadingMessages(false)
+        async function fetchMessages() {
+            if (!props.conversationId) {
+                setMessage([]);
+                // return;
+            }
+            if(props.conversationId && user?.id) {
+                setLoadingMessages(true)
+                const data = await loadMessages(props.conversationId);
+                console.log("Loaded messages:", data);
+                setMessage(data);
+
+                setLoadingMessages(false);
+            } else {
+                setLoadingMessages(false)
+            }
         }
-    }, [user, props.conversationId])
+
+        fetchMessages();
+    }, [user, props.conversationId]);
+
     // Functions for main Chat UI
     async function handleSend() {
         
@@ -48,16 +69,18 @@ export default function ChatUI(props) {
         const textToSend = inputText.trim() || transcript.trim()
         if (!textToSend) return;
 
-        let convID = currentConvoId
+        let convID = props.conversationId;
+        let convoData = null;
+
         if(!convID) {
-            const { data: convoData, error } = await supabase
+            const { data, error } = await supabase
                 .from('conversation')
                 .insert({user_id: user.id, title: textToSend, created_at: new Date().toISOString()})
                 .select()
                 .single()
+            
+            convoData = data;
             convID = convoData.id
-            setCurrentConvoId(convID)
-            props.onConversationCreated(convoData)
         }
         
         // Add user's message to the chat
@@ -70,7 +93,7 @@ export default function ChatUI(props) {
             created_at: new Date().toISOString()
         }
         setMessage(prev => [...prev, user_msg])
-        saveMessages(user_msg)
+        await saveMessages(user_msg)
 
         // Loading for AI
         const AI_think = {
@@ -88,7 +111,7 @@ export default function ChatUI(props) {
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ message: textToSend, history: message })
+            body: JSON.stringify({ message: textToSend, history: messageHistory })
         });
 
         const data = await response.json();
@@ -114,9 +137,12 @@ export default function ChatUI(props) {
             )
         )
         
-        saveMessages(AI_msg)
+        await saveMessages(AI_msg)
         setLoadingMessages(false)
 
+        if (convoData) {
+            props.onConversationCreated(convoData);
+        }
         // optional: speak the response back
         if (usedVoice) {
             const utterance = new SpeechSynthesisUtterance(data.response)
@@ -158,13 +184,13 @@ export default function ChatUI(props) {
             </div>
             <div className={styles["chat-history"]}>
                 {loadingMessages && <p>Loading chat...</p>}
-                {message.length === 0 && (
+                {messageHistory.length === 0 && (
                     <p className={styles["sous-msg"]}>
                         Good day. I'm SOUS, your culinary assistant. Ask me anything — 
                         from how long to rest a steak to what to make with leftover rice.
                     </p>
                 )}
-                {message.map((msg, i) => (
+                {messageHistory.map((msg, i) => (
                     <div key={i} className={styles[msg.role === 'user' ? 'user-msg' : 'sous-msg']}>
                         {msg.role === 'assistant' && <span className={styles["sous-tag"]}>SOUS</span>}
                         <ReactMarkdown remarkPlugins={[remarkGfm]}>
