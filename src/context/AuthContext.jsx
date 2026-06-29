@@ -53,7 +53,6 @@ export function AuthContextProvider({ children }) {
                 console.error("Sign in error occurred: ", error)
                 return {success: false, error}
             }
-            console.log("Sign In success: ", data)
             return {success: true, data}
         } catch(error) {
             console.error("An error occurred: ", error)

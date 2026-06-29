@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import styles from '../Sub_component/Find_recipe.module.css'
+import styles from './Find_recipe.module.css'
 export default function IngredientList(props) {
     const ingredientsListItems = props.ingredients.map((ingredient) => {
         return <li key={ingredient}>{ingredient}</li>

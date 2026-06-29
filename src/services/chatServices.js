@@ -1,13 +1,11 @@
 import { supabase } from "../SupabaseCli"
-export async function loadMessages(userId) {
-    const { data, error } = await supabase
+export async function loadMessages(conversationID) {
+    const { data } = await supabase
         .from("messages")
         .select("*")
-        .eq("user_id", userId)
+        .eq("conversation_id", conversationID)
         .order("created_at", { ascending: true })
-
-    if (error) throw error
-    return data
+    return data || []
 }
 
 export async function saveMessages(message) {
@@ -17,4 +15,14 @@ export async function saveMessages(message) {
     if(error) {
         throw error
     }
+}
+
+export async function saveConversation(conversation) {
+    const { data, error } = await supabase
+        .from("conversation")
+        .insert(conversation)
+
+    if (error) throw error
+
+    return data
 }

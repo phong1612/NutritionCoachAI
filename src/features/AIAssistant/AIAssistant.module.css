@@ -1,23 +1,60 @@
-.voice-chat {
+.ai-wrapper {
+    display: flex;
+}
+
+/* Side Bar CSS */
+.sidebar {
+    width: 20%;
+    height: calc(100vh - 150px);
+    border: 1px solid black;
+    padding: 10px;
+}
+.sidebar button {
+    width: 100%;
+    height: calc-size(auto, size + 30px);
+    font-size: 1.5rem;
+    border: transparent;
+    border-bottom: 1px solid #0a1f42;
+    background-color: transparent;
+    margin-bottom: 10px;
+}
+.sidebar button:hover {
+    cursor: pointer;
+    font-size: 1.75rem;
+    background-color: #0a1f42;
+    color: white;
+}
+.sidebar > p {
+    font-size: 1rem;
+    margin-bottom: 20px;
+    height: calc-size(auto, size + 10px);
+}
+.sidebar p:hover {
+    cursor: pointer;
+    background-color: #f0f0f0;
+}
+
+
+/* Chat screen CSS */
+.chat-UI {
     display: flex;
     flex-direction: column;
+    width: 80%;
     height: calc(100vh - 150px);          /* full viewport height */
     overflow: hidden;
 }
 
+/* Chat UI */
 .sous-header {
     text-align: center;
-    padding: 16px;
-    flex-shrink: 0;         /* won't shrink */
 }
-
 .chat-history {
     display: flex;
     flex-direction: column;
+    flex: 1;
     gap: 12px;
     padding: 16px;
-    flex: 1;                /* takes up all remaining space */
-    overflow-y: auto;       /* scrollable when messages overflow */
+    overflow-y: auto;
 }
 
 .controls {
