@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import IngredientList from '../AI_component/IngredientList'
-import AIRecipe from '../AI_component/AIRecipe'
-import { getRecipeFromMistral } from '../AI_component/AI_recipe'
+import IngredientList from './IngredientList'
+import AIRecipe from './AIRecipe'
+import { getRecipeFromMistral } from './AI_recipe'
 import styles from './Find_recipe.module.css'
 export default function Find_recipe() {
     const [ingredients, setIngredient] = useState([])
@@ -44,6 +44,12 @@ export default function Find_recipe() {
                 />
                 <button>Add ingredient</button>
             </form>
+            {ingredients.length < 4 && (
+                <div className={styles["empty-state"]}>
+                    <span>🥘</span>
+                    <p>Add at least {4 - ingredients.length} more ingredient{4 - ingredients.length !== 1 ? 's' : ''} to get a recipe</p>
+                </div>
+            )}
             <section className={styles['ingredient-process']}>
                 {ingredients.length > 0 && 
                 <IngredientList 

@@ -2,42 +2,43 @@ import { useState, useEffect } from 'react'
 import useSpeechRecognition from '../../hooks/useSpeechRecognition'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import styles from './VoiceChat.module.css'
+import styles from './AIAssistant.module.css'
 import { supabase } from '../../SupabaseCli'
 import { userAuth } from '../../context/AuthContext'
 import { loadMessages, saveMessages } from '../../services/chatServices'
+import sidebar from '../../assets/sidebar.svg'
 
-
-export default function VoiceChat() {
+export default function ChatUI(props) {
     const [message, setMessage] = useState([])
     const [inputText, setInputText] = useState('')
     const { transcript, isListening, startListening, stopListening, setIsListening } = useSpeechRecognition()
     const [AIResponse, setAIResponse] = useState("")
     const [usedVoice, setUsedVoice] = useState(false)
     const [loadingMessages, setLoadingMessages] = useState(true)
+    const [currentConvoId, setCurrentConvoId] = useState(props.conversationId)
     const { session, signInUser } = userAuth()
     const user = session?.user
 
     // sync transcript into input when voice is used
     const displayText = isListening ? transcript : inputText
     useEffect(() => {
-        if(user?.id) {
+        setMessage([])
+        if(props.conversationId && user?.id) {
             setLoadingMessages(true)
-            loadMessages(user.id).then(
+            loadMessages(props.conversationId).then(
                 (data) => {
                     setMessage(data)
-                })
-                .catch((error) => {
-                    console.error(error)
                 })
                 .finally(() => {
                     setLoadingMessages(false)
                 })
+        } else {
+            setLoadingMessages(false)
         }
-    }, [user])
-
-    
-    async function handleSend(e) {
+    }, [user, props.conversationId])
+    // Functions for main Chat UI
+    async function handleSend() {
+        
         if (isListening) {
             stopListening()
             setInputText(transcript)  // copy transcript into input when stopped
@@ -47,9 +48,22 @@ export default function VoiceChat() {
         const textToSend = inputText.trim() || transcript.trim()
         if (!textToSend) return;
 
+        let convID = currentConvoId
+        if(!convID) {
+            const { data: convoData, error } = await supabase
+                .from('conversation')
+                .insert({user_id: user.id, title: textToSend, created_at: new Date().toISOString()})
+                .select()
+                .single()
+            convID = convoData.id
+            setCurrentConvoId(convID)
+            props.onConversationCreated(convoData)
+        }
+        
         // Add user's message to the chat
         setInputText('')  // clear input after sending
         const user_msg = {
+            conversation_id: convID,
             user_id: user.id,
             role: "user",
             content: textToSend,
@@ -60,6 +74,7 @@ export default function VoiceChat() {
 
         // Loading for AI
         const AI_think = {
+            conversation_id: convID,
             user_id: user.id,
             role: "assistant",
             content: "Thinking...",
@@ -77,8 +92,9 @@ export default function VoiceChat() {
         });
 
         const data = await response.json();
-
+        
         const AI_msg = {
+            conversation_id: convID,
             user_id: user.id,
             role: "assistant",
             content: data.response,
@@ -88,6 +104,7 @@ export default function VoiceChat() {
             prev.map(msg =>
                 msg.content === "Thinking..."
                     ? {
+                        conversation_id: convID,
                         user_id: user.id,
                         role: "assistant",
                         content: data.response,
@@ -113,7 +130,7 @@ export default function VoiceChat() {
     function handleMicButton() {
         if (isListening) {
             stopListening()
-            setInputText(transcript)  // copy transcript into input when stopped
+            setInputText(transcript.trim())  // copy transcript into input when stopped
             setUsedVoice(true)
         } else {
             setInputText('')
@@ -134,12 +151,11 @@ export default function VoiceChat() {
     }
 
     return (
-        <div className={styles["voice-chat"]}>
+        <div className={styles["chat-UI"]}>
             <div className={styles["sous-header"]}>
                 <h1>SOUS</h1>
                 <p>Your AI Culinary Assistant</p>
             </div>
-
             <div className={styles["chat-history"]}>
                 {loadingMessages && <p>Loading chat...</p>}
                 {message.length === 0 && (
@@ -149,13 +165,12 @@ export default function VoiceChat() {
                     </p>
                 )}
                 {message.map((msg, i) => (
-                    
-                        <div key={i} className={styles[msg.role === 'user' ? 'user-msg' : 'sous-msg']}>
-                            {msg.role === 'assistant' && <span className={styles["sous-tag"]}>SOUS</span>}
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {msg.content}
-                            </ReactMarkdown>
-                        </div>
+                    <div key={i} className={styles[msg.role === 'user' ? 'user-msg' : 'sous-msg']}>
+                        {msg.role === 'assistant' && <span className={styles["sous-tag"]}>SOUS</span>}
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {msg.content}
+                        </ReactMarkdown>
+                    </div>
                 ))}
             </div>
 

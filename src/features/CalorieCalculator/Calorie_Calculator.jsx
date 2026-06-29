@@ -47,7 +47,6 @@ export default function Calorie() {
         const weight = formData.get("Weight") || 60
         const height = formData.get("Height") || 170
         const age = formData.get('Age') || 25
-        console.log(weight, height, age)
 
         if(gender == "Male") {
             let Calorie_men = (66.47 + (13.75 * weight) + (5.003 * height) - (6.755 * age)) * workout

@@ -21,7 +21,6 @@ Format your responses cleanly:
 - Keep responses concise — the user is likely mid-cook`
 
 export default async function handler(req, res) {
-    console.log("HF TOKEN EXISTS:", !!process.env.HF_ACCESS_TOKEN)
     if (req.method !== "POST") {
         return res.status(405).json({ error: "Method not allowed" });
     }

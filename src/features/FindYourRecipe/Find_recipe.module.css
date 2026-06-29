@@ -60,6 +60,18 @@ ul.ingredients-list > li {
     color: #FAFAF8
 }
 
+.empty-state {
+    padding-top: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+}
+.empty-state > span {
+    font-size: 4rem;
+}
+
 .ingredient-process {
     padding: 0px 200px;
 }

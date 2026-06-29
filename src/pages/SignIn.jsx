@@ -6,42 +6,34 @@ import { userAuth } from '../context/AuthContext'
 export default function SignUp() {
     const [email, setEmail] = useState('')
     const [password, setPassword] = useState('')
-    const [confirmPassword, setConfirmPassword] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState('')
 
-    const { session, signUpNewUser } = userAuth()
+    const { session, signInUser } = userAuth()
     const navigate = useNavigate()
-    console.log(session)
-    console.log(email, password)
 
-    const handleSignUp = async (e) => {
+    const handleSignIn = async (e) => {
         e.preventDefault();
-
-        if(confirmPassword !== password) {
-            setError('Password do not match!')
-            return;
-        }
-        
         setLoading(true)
-        setError('')
         try {
-            const result = await signUpNewUser(email, password)
-
-            if (result.success) {
-                navigate('/signIn')
+            const result = await signInUser(email, password)
+            if (!result.success) {
+                setError(result.error?.message)
+                return
             }
+
+            navigate('/Dashboard')
         } catch (err) {
-            setError('An error occurred');
+            setError('An error occurred: ');
         } finally {
             setLoading(false)
         }
     };
 
     return (
-        <form className='SignIn_SignUp-container' onSubmit={handleSignUp}>
-            <h2>Sign Up</h2>
-            <p> Already have an account? <Link to='/signIn'>Sign In</Link></p>
+        <form className='SignIn_SignUp-container' onSubmit={handleSignIn}>
+            <h2>Sign In</h2>
+            
 
             <div className='register-container'>
                 <input 
@@ -60,15 +52,8 @@ export default function SignUp() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                 />
-                <input 
-                    type="password" 
-                    placeholder="Confirm Password" 
-                    name='' 
-                    id='' 
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                />
-                <button type="submit">Sign Up</button>
+                <button type="submit">Sign In</button>
+                <p> Don't have an account? <Link to='/signUp'>Sign Up</Link></p>
                 {error && <p style={{ color: "red" }}>{error}</p>}
             </div>
         </form>
