@@ -20,22 +20,6 @@ export default function ChatUI(props) {
 
     // sync transcript into input when voice is used
     const displayText = isListening ? transcript : inputText
-    // useEffect(() => {
-    //     setMessage([])
-    //     if(props.conversationId && user?.id) {
-    //         setLoadingMessages(true)
-    //         loadMessages(props.conversationId).then(
-    //             (data) => {
-    //                 setMessage(data)
-    //             })
-    //             .finally(() => {
-    //                 setLoadingMessages(false)
-    //             })
-    //     } else {
-    //         setLoadingMessages(false)
-    //     }
-    // }, [user, props.conversationId])
-
     useEffect(() => {
         async function fetchMessages() {
             if (!props.conversationId) {
