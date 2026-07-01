@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import '../index.css'
 import { userAuth } from '../context/AuthContext.jsx'
+import {supabase} from '../SupabaseCli'
+import { saveProfile } from '../services/profileServices.js'
 
 export default function SignUp() {
     const [email, setEmail] = useState('')
@@ -24,9 +26,26 @@ export default function SignUp() {
         setLoading(true)
         setError('')
         try {
-            const result = await signUpNewUser(email, password)
+            const result = await signUpNewUser(email, password) // result: {success, data} or {success, error}
 
             if (result.success) {
+                // Save user profile after successful sign-up
+                console.log(result)
+                const user = result.data.user;
+                const newProfile = {
+                    id: user.id,
+                    email: user.email,
+                    full_name: '',
+                    username: ''
+                };
+
+                try {
+                    await saveProfile(newProfile);
+                    console.log('User profile saved successfully');
+                } catch(error) {
+                    console.error('Error saving user profile:', error);
+                }
+
                 navigate('/signIn')
             }
         } catch (err) {
