@@ -70,7 +70,7 @@ export default function UserProfile() {
             // Update Profile with new avatar URL
             const {error: updateError} = await supabase
                 .from("profiles")
-                .update({ avatar_url: data.publicUrl })
+                .update({ avatar_url: publicUrl })
                 .eq("id", userProfile.id);
 
             if (updateError) {
@@ -80,6 +80,10 @@ export default function UserProfile() {
             console.log("Avatar updated successfully:", publicUrl);
 
             setUserProfile((prev) => ({
+                ...prev,
+                avatar_url: publicUrl,
+            }));
+            setEditProfile((prev) => ({
                 ...prev,
                 avatar_url: publicUrl,
             }));
