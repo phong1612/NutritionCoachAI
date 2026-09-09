@@ -1,0 +1,208 @@
+import { useState, useEffect } from 'react'
+import useSpeechRecognition from '../../hooks/useSpeechRecognition'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import styles from './AIAssistant.module.css'
+import { supabase } from '../../SupabaseCli'
+import { userAuth } from '../../context/AuthContext'
+import { loadMessages, saveMessages } from '../../services/chatServices'
+import sidebar from '../../assets/sidebar.svg'
+
+export default function ChatUI(props) {
+    const [messageHistory, setMessage] = useState([])
+    const [inputText, setInputText] = useState('')
+    const { transcript, isListening, startListening, stopListening, setIsListening } = useSpeechRecognition()
+    const [AIResponse, setAIResponse] = useState("")
+    const [usedVoice, setUsedVoice] = useState(false)
+    const [loadingMessages, setLoadingMessages] = useState(false)
+    const { session, signInUser } = userAuth()
+    const user = session?.user
+
+    // sync transcript into input when voice is used
+    const displayText = isListening ? transcript : inputText
+    useEffect(() => {
+        async function fetchMessages() {
+            if (!props.conversationId) {
+                setMessage([]);
+                // return;
+            }
+            if(props.conversationId && user?.id) {
+                setLoadingMessages(true)
+                const data = await loadMessages(props.conversationId);
+                console.log("Loaded messages:", data);
+                setMessage(data);
+
+                setLoadingMessages(false);
+            } else {
+                setLoadingMessages(false)
+            }
+        }
+
+        fetchMessages();
+    }, [user, props.conversationId]);
+
+    // Functions for main Chat UI
+    async function handleSend() {
+        
+        if (isListening) {
+            stopListening()
+            setInputText(transcript)  // copy transcript into input when stopped
+            setUsedVoice(true)
+        }
+
+        const textToSend = inputText.trim() || transcript.trim()
+        if (!textToSend) return;
+
+        let convID = props.conversationId;
+        let convoData = null;
+
+        if(!convID) {
+            const { data, error } = await supabase
+                .from('conversation')
+                .insert({user_id: user.id, title: textToSend, created_at: new Date().toISOString()})
+                .select()
+                .single()
+            
+            convoData = data;
+            convID = convoData.id
+        }
+        
+        // Add user's message to the chat
+        setInputText('')  // clear input after sending
+        const user_msg = {
+            conversation_id: convID,
+            user_id: user.id,
+            role: "user",
+            content: textToSend,
+            created_at: new Date().toISOString()
+        }
+        setMessage(prev => [...prev, user_msg])
+        await saveMessages(user_msg)
+
+        // Loading for AI
+        const AI_think = {
+            conversation_id: convID,
+            user_id: user.id,
+            role: "assistant",
+            content: "Thinking...",
+            created_at: new Date().toISOString()
+        }
+        setMessage(prev => [...prev, AI_think])
+
+        // Send the message to API
+        const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ message: textToSend, history: messageHistory })
+        });
+
+        const data = await response.json();
+        
+        const AI_msg = {
+            conversation_id: convID,
+            user_id: user.id,
+            role: "assistant",
+            content: data.response,
+            created_at: new Date().toISOString()
+        }
+        setMessage(prev =>
+            prev.map(msg =>
+                msg.content === "Thinking..."
+                    ? {
+                        conversation_id: convID,
+                        user_id: user.id,
+                        role: "assistant",
+                        content: data.response,
+                        created_at: new Date().toISOString()
+                    }
+                    : msg
+            )
+        )
+        
+        await saveMessages(AI_msg)
+        setLoadingMessages(false)
+
+        if (convoData) {
+            props.onConversationCreated(convoData);
+        }
+        // optional: speak the response back
+        if (usedVoice) {
+            const utterance = new SpeechSynthesisUtterance(data.response)
+            utterance.lang = 'en-US'
+            window.speechSynthesis.speak(utterance)
+        }
+        setUsedVoice(false)
+        
+    }
+
+    function handleMicButton() {
+        if (isListening) {
+            stopListening()
+            setInputText(transcript.trim())  // copy transcript into input when stopped
+            setUsedVoice(true)
+        } else {
+            setInputText('')
+            startListening()
+            setUsedVoice(false)
+        }
+    }
+
+    // reset usedVoice when user starts typing manually
+    function handleInputChange(e) {
+        setInputText(e.target.value)
+        setUsedVoice(false)  // typing overrides voice mode
+    }
+
+    // send on Enter key
+    function handleKeyDown(e) {
+        if (e.key === 'Enter') handleSend()
+    }
+
+    return (
+        <div className={styles["chat-UI"]}>
+            <div className={styles["sous-header"]}>
+                <h1>SOUS</h1>
+                <p>Your AI Culinary Assistant</p>
+            </div>
+            <div className={styles["chat-history"]}>
+                {loadingMessages && <p>Loading chat...</p>}
+                {messageHistory.length === 0 && (
+                    <p className={styles["sous-msg"]}>
+                        Good day. I'm SOUS, your culinary assistant. Ask me anything — 
+                        from how long to rest a steak to what to make with leftover rice.
+                    </p>
+                )}
+                {messageHistory.map((msg, i) => (
+                    <div key={i} className={styles[msg.role === 'user' ? 'user-msg' : 'sous-msg']}>
+                        {msg.role === 'assistant' && <span className={styles["sous-tag"]}>SOUS</span>}
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {msg.content}
+                        </ReactMarkdown>
+                    </div>
+                ))}
+            </div>
+
+            <div className={styles["controls"]}>
+                <input className={styles['input_query']} 
+                                    type="text" 
+                                    placeholder={isListening ? '🎙 Listening...' : 'Ask SOUS anything...'}
+                                    aria-label='Add query'
+                                    name="Query"
+                                    value={inputText}
+                                    onChange={handleInputChange}
+                                    onKeyDown={handleKeyDown}
+                />
+                <button onClick={handleMicButton} className={styles['mic-button']} aria-label={isListening ? 'Stop recording' : 'Start recording'}>
+                    {isListening ? '⏹' : '🎙'}
+                </button>
+
+                <button className={styles['send-button']} onClick={handleSend}>
+                    Send to SOUS
+                </button>
+            </div>
+        </div>
+    )
+}
+// 

@@ -1,0 +1,90 @@
+.userProfile-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 20px;
+    border-radius: 10px;
+    width: 100%;
+    max-width: 900px;
+    margin: 0 auto;
+}
+.userProfile-container > p {
+    margin: 10px 0;
+    font-size: 1.5rem;
+    color: #333;
+}
+.userProfile-container > p:hover {
+    color: #74e293;
+    cursor: pointer;
+}
+
+
+.profile-container {
+    display: flex;
+    align-items: stretch;
+    margin-top: 20px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    gap: 20px;
+}
+
+.profile-display-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 40%;
+    padding: 50px;
+    border-right: 1px solid #ccc;
+    border-radius: 10px 0 0 10px;
+    color: #FAFAFA;
+    background: #137ea8;
+    background: linear-gradient(90deg, rgba(19, 126, 168, 1) 50%, rgba(70, 48, 166, 1) 100%);
+}
+.profile-display-container img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 20px;
+}
+
+.profile-display-container label {
+    font-weight: bold;
+    margin: 10px 0;
+}
+.profile-display-container label:hover {
+    color: #74e293;
+    cursor: pointer;
+}
+.profile-display-container p {
+    gap: 10px;
+}
+
+.profile-update-container {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 60%;
+    padding: 30px;
+    gap: 20px;
+}
+.profile-update-container label {
+    font-weight: bold;
+    margin: 10px 0;
+}
+.profile-update-container input,
+.profile-update-container select {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 100%;
+}
+.profile-update-container button {
+    padding: 10px 20px;
+    background-color: #74e293;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}

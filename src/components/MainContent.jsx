@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 
 
-import Find_recipe from './Sub_component/Find_recipe'
-import Calorie from './Sub_component/Calorie_Calculator'
-import VoiceChat from './Sub_component/VoiceChat'
+import Find_recipe from '../features/FindYourRecipe/Find_recipe'
+import Calorie from '../features/CalorieCalculator/Calorie_Calculator'
+import ChatUI from '../features/AIAssistant/AIAssistant'
 export default function MainContent(props) {
     let activeFeature=<Find_recipe/>
     switch(props.activeButton) {
@@ -12,7 +12,7 @@ export default function MainContent(props) {
             break
         // Incoming feature, not finished yet
         case "Voice Chat":
-            activeFeature=<VoiceChat/>
+            activeFeature=<ChatUI/>
             break
         default:
             activeFeature=<Find_recipe/>
